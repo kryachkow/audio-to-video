@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]"
+      - name: Run tests (Linux needs a virtual display for Tkinter)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -m pytest -v
+      - name: Run tests
+        if: runner.os != 'Linux'
+        run: python -m pytest -v
+
+  build-windows-exe:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python build_exe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AudioToVideo-windows
+          path: dist/AudioToVideo.exe
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AudioToVideo.exe
+    permissions:
+      contents: write

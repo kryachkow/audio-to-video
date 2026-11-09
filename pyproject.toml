@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audio-to-video"
+version = "1.0.0"
+description = "Make a video from a music file (mp3/wav/flac) and a single image"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = ["imageio-ffmpeg>=0.8"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+build = ["pyinstaller>=6"]
+
+[project.scripts]
+audio-to-video = "audio_to_video.cli:main"
+
+[project.gui-scripts]
+audio-to-video-gui = "audio_to_video.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "integration: runs the real ffmpeg binary",
+    "gui: needs a display for Tkinter",
+]
